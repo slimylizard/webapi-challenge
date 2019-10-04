@@ -23,13 +23,21 @@ router.post('/:id', validateProjectId, validateAction, (req, res) => {
         })
 })
 
-router.put('/', (req, res) => {
-    const { id: project_id }
+router.put('/:project_id', validateProjectId, validateActionId, validateAction, (req, res) => {
+    console.log('here')
+    const { project_id } = req.params
+    const {id, discription, notes} = req.body
+    Action.update(id, {discription, notes})
+        .then(update => {
+            console.log(req.body)
+            res.status(200).json(update)
+        })
+        .catch(err => {
+            console.log(err)
+            res.status(500).json({ error: "Error updating" })
+        })
 })
 
-//router.delete('/', (req, res) => {
-
-//})
 //middleware
 function validateAction(req, res, next) {
     const { id: project_id } = req.params;
@@ -39,28 +47,39 @@ function validateAction(req, res, next) {
     }
     next();
 }
-
 function validateActionId(req, res, next) {
-    const { id } = req.params;
+    const { id } = req.body
+    console.log("hi from VAI", id)
     Action.get(id)
         .then(action => {
-            if (!action) {
-                return res.status(404).json({ error: "action with Id not found" })
+            console.log('hi from then',action)
+            if(!action){
+                res.status(404).json({ error: "action not found" })
+            } else{
+                next()
             }
         })
-}
+        .catch(err => {
+            console.log(err)
+            res.status(500).json({ error: "Error getting actions" })
+        })
 
+}
 function validateProjectId(req, res, next) {
-    console.log(req.params)
-    const { id } = req.params;
-    Project.get(id)
+    console.log("first", req.params)
+    const { project_id } = req.params;
+    Project.get(project_id)
         .then(project => {
             console.log(project)
             if (!project) {
+                console.log('before error')
                 res.status(404).json({ error: "project with Id not found" })
             } else {
                 next()
             }
-        });
+        })
+        .catch(err => {
+            console.log(err)
+        })
 }
 module.exports = router
